@@ -1,5 +1,3 @@
-#Physical Lab
-
 # Boot to kali on nuc
 
 - Put USB into USB slot. 
