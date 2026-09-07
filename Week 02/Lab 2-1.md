@@ -49,3 +49,22 @@ Switch(config)# interface range fastEthernet 0/4-12
 Switch(config-if-range)# switchport mode access
 Switch(config-if-range)# switchport access vlan 100
 ```
+
+## 5. Layer 3 Inter-VLAN Routing & IP Configuration
+
+```text
+Switch(config)# ip routing
+Switch(config)# interface vlan 100
+Switch(config-if)# ip address 10.25.100.1 255.255.255.0
+Switch(config-if)# no shutdown
+Switch(config-if)# exit
+```
+
+---
+
+## 6. Verification
+
+```text
+Switch# show ip interface brief
+Switch# show ip interface vlan 100
+```

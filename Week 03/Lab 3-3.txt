@@ -1,0 +1,64 @@
+## 1. How to Create Pools
+
+DHCP pools are created using the **GUI in a Server**. 
+
+### Steps:
+1. Open the **Server** configuration window.
+2. Navigate to the **Services** tab and select **DHCP** from the left menu.
+3. Ensure the service is toggled to **On**.
+4. Fill out the text fields with the parameters for your specific user VLAN.
+5. Click the **Add** button to create the new pool.
+
+### Example Pool Template (VLAN 100):
+* **Pool Name:** `FacStaff_Pool`
+* **Default Gateway:** `10.9.15.1` *(The Layer 3 Switch SVI address for this VLAN)*
+* **DNS Server:** `0.0.0.0`
+* **Start IP Address:** `10.9.15.10` *(Or your chosen starting host octet)*
+* **Subnet Mask:** `255.255.255.0`
+* **Maximum number of Users:** `246` *(Adjust based on your Subnet Table)*
+* **TFTP / WLC:** `0.0.0.0`
+
+---
+
+## 2. Working with serverPool
+
+The `serverPool` is a default, system-reserved pool that cannot be deleted. It is repurposed for **VLAN 1 (Management)**.
+
+### Steps to Modify:
+1. Click on `serverPool` from the list at the bottom of the DHCP services interface. This loads its values into the text fields above.
+2. Keep the name as `serverPool`.
+3. Change the last octet of the **Start IP Address** to `100` (e.g., `10.9.14.10`).
+4. Click the **Save** button *(Do NOT click Add, as you are overwriting an existing pool rather than making a new one)*.
+
+---
+
+## 3. Assigning IP Helper Addresses
+
+Because DHCP discovery requests use broadcasts, they cannot natively cross a router boundary. The `ip helper-address` command turns these broadcasts into unicast traffic directed at the server.
+
+Configure this on the **CLI of the East-Core-Switch** under each specific Switched Virtual Interface (SVI):
+
+```text
+East-Core-Switch(config)# interface vlan 100
+East-Core-Switch(config-if)# ip helper-address [DHCP_Server_IP]
+
+East-Core-Switch(config)# interface vlan 110
+East-Core-Switch(config-if)# ip helper-address [DHCP_Server_IP]
+
+East-Core-Switch(config)# interface vlan 130
+East-Core-Switch(config-if)# ip helper-address [DHCP_Server_IP]
+
+East-Core-Switch(config)# interface vlan 140
+East-Core-Switch(config-if)# ip helper-address [DHCP_Server_IP]
+```
+*(Replace `[DHCP_Server_IP]` with the static IP address assigned to your DHCP-01 server).*
+
+---
+
+## 4. Troubleshooting & Issues Encountered
+
+When deploying DHCP in Packet Tracer, the following distinct pitfalls are commonly encountered:
+
+* **Overwriting Pools via GUI Buttons:** Clicking **Add** instead of **Save** when updating `serverPool` throws an error. Conversely, clicking **Save** instead of **Add** when creating a new custom pool accidentally overwrites whatever pool you had selected previously.
+* **Missing Switch Trunking:** If the link between your edge switches and the `East-Core-Switch` is not explicitly set to `switchport mode trunk`, the broadcast traffic inside the VLAN tag will never hit the SVI to trigger the helper address.
+* **Forgetting to add Default Gateway:** Human Error is bound to cause mistakes and we are working with a lot of numbers. Remember to check your addresses, including the modified one in the event that devices do not ping each other when switching to DHCP. 
